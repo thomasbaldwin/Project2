@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 	char *fileName = "foo.txt";
 
 	FILE *fp;
-	fp = fopen(fileName, "r+");
+	fp = fopen("foo.txt", "r+");
 
 	int currentValue;
 	int previousValue;

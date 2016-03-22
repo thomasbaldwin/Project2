@@ -15,20 +15,20 @@ int main(int argc, char *argv[])
 	char *fileName = argv[2];
 
 	FILE *fp;
-	fp = fopen(fileName, "r");
 	int read;
 
+	fp = fopen(fileName, "r");
 	while(!feof(fp)) {
 		fscanf(fp, "%d", &read);
 	}
+	fclose(fp);
 
-	fp = fopen(fileName, "a");
-
-	int i;
-	for(i=1; i<=numberOfRowsToAppend; i++) {
+	int i=0;
+	for(i=0; i<numberOfRowsToAppend; i++) {
+		fp = fopen(fileName, "a+");
 		fprintf(fp, "%d\n", read+i);
+		fclose(fp);
 	}
 
-	fclose(fp);
 	return 0;
 }

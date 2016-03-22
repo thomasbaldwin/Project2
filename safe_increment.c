@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int turn;
+#define SETFLAGBIT 2
+#define TURNBIT 1
+
 pid_t currentProcess;
 pid_t otherProcess;
 
 void increment(int, char*);
 void enter_region(void);
 void leave_region(void);
+int get_set_flag(pid_t);
+int get_turn(pid_t);
 
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
@@ -16,9 +20,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	FILE *fp;
-	fp = fopen("config.txt", "r+");
+	fp = fopen("config.txt", "a+");
 
-	fseek(fp, 0, SEEK_END);
 	currentProcess = getpid();
 	fprintf(fp, "%d\n", currentProcess);
 
@@ -40,35 +43,76 @@ int main(int argc, char *argv[]) {
 	int numberOfRowsToAppend = atoi(argv[1]);
 	char *fileName = argv[2];
 
-	enter_region();
-	increment(numberOfRowsToAppend, fileName);
-	leave_region();
+	int i;
+	for(i=0; i<numberOfRowsToAppend; i++) {
+		enter_region();
+		increment(numberOfRowsToAppend, fileName);
+		leave_region();
+	}
 
 	return 0;
 }
 
 void increment(int numberOfRowsToAppend, char *fileName) {
 	FILE *fp;
-	fp = fopen(fileName, "r+");
-	
 	int read;
+
+	fp = fopen(fileName, "r+");
 	while(!feof(fp)) {
 		fscanf(fp, "%d", &read);
 	}
+	fclose(fp);
 
-	int i;
-	for(i=1; i<=numberOfRowsToAppend; i++) {
-		fprintf(fp, "%d\n", read+i);
-	}
-
+	fp = fopen(fileName, "a+");
+	fprintf(fp, "%d\n", read+1);
 	fclose(fp);
 }
 
 void enter_region()
 {
 	int status;
-	while (get_sv(otherProcess, &status) == 1);
-	set_sv(1, &status);
+	int sv;
+
+	sv = 1;
+	sv |= 1 << SETFLAGBIT;
+	sv |= 1 << TURNBIT; 
+
+	set_sv(sv, &status);
+	int otherSetFlag = get_set_flag(otherProcess);	
+	while (get_set_flag(otherProcess) == 1 && get_turn(otherProcess) == 1);
+}
+
+int get_set_flag(pid_t PID)
+{
+	int status;
+	int sv;
+	int bit;
+
+	sv = get_sv(PID, &status);	
+	bit = !!(sv & (1 << SETFLAGBIT));
+	return bit;
+}
+
+int get_turn(pid_t otherPID)
+{
+	int status;
+	int currentProcessSV;
+	int currentProcessTurnBit;
+	int otherProcessSV;
+	int otherProcessTurnBit;
+
+	currentProcessSV = get_sv(getpid(), &status);
+	currentProcessTurnBit = !!(currentProcessSV & (1 << TURNBIT));
+
+	otherProcessSV = get_sv(otherPID, &status);
+	otherProcessTurnBit = !!(otherProcessSV & (1 << TURNBIT));
+
+	if (!(!currentProcessTurnBit != !otherProcessTurnBit)) {
+		if (getpid() > otherPID) 
+			return 0;
+	}
+
+	return 1;
 }
 
 void leave_region()

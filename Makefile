@@ -1,4 +1,4 @@
-CC=gcc
+CC=cc
 
 %.o: %.c
 	$(CC) -c -o $@ $^
