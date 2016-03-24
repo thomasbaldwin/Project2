@@ -86,7 +86,11 @@ int get_other_set_flag(int otherPID) {
 	int status;
 	int sv = get_sv(otherPID, &status);
 	int otherFlag = (sv & (1 << SETFLAG));
-	return otherFlag;
+    
+    if (otherFlag == 2) {
+        return TRUE
+    }
+    return FALSE:
 }
 
 int get_turn(process, currentPID, otherPID) {
