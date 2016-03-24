@@ -103,16 +103,7 @@ int get_turn(process, currentProcess, otherProcess) {
 		if((currentProcessTurn ^ otherProcessTurn) == 0) {
 			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
-	} else {
-		if((currentProcessTurn ^ otherProcessTurn) == 1) {
-			set_sv(currentProcessSV ^= 1 << TURN, &status);
-		}
 	}
 
-	currentProcessSV = get_sv(currentProcess, &status);
-	currentProcessTurn = (currentProcessSV & (1 << TURN));
-
-	otherProcessSV = get_sv(otherProcess, &status);
-	otherProcessTurn = (otherProcessSV & (1 << TURN));
 	return (currentProcessTurn ^ otherProcessTurn);
 }
