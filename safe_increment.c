@@ -99,6 +99,9 @@ int get_turn(process, currentProcess, otherProcess) {
 	int otherProcessSV = get_sv(otherProcess, &status);
 	int otherProcessTurn = (otherProcessSV & (1 << TURN));
 
+	printf("Other Process Turn: %d\n", currentProcessTurn);
+	printf("Other Process Turn: %d\n", otherProcessTurn);
+	
 	if((currentProcessTurn ^ otherProcessTurn) == 0) {
 		if (currentProcess > otherProcess) {
 			return 0;
