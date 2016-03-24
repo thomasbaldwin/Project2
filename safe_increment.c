@@ -91,7 +91,12 @@ void enter_region()
 		turn = 1;
 	}
 
-	set_sv(sv)
+	printf("Made it to enter_region \n");
+
+	set_sv(sv);
+
+	printf("Set_sv in enter region called \n");
+
 	while (get_set_flag(otherProcess) == 1 && get_turn(otherProcess) == turn);
 }
 
@@ -103,6 +108,8 @@ int get_set_flag(pid_t PID)
 
 	sv = get_sv(PID, &status);	
 	bit = (sv & SETFLAGBIT);
+
+	printf("Made it to get_set_flag \n");
 	return bit;
 }
 
@@ -120,11 +127,15 @@ int get_turn(pid_t otherPID)
 	otherProcessSV = get_sv(otherPID, &status);
 	otherProcessTurnBit = (otherProcessSV & TURNBIT);
 
+	printf("Made it to get_turn");
+
 	return ((currentProcessTurnBit & TURNBIT) ^ (otherProcessTurnBit & TURNBIT));
 }
 
 void leave_region()
 {
+	printf("Made it to leave_region \n");
 	int status;
 	set_sv(0, &status);	
+	printf("Set sv called in leave_region \n");
 }
