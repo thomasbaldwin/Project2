@@ -50,6 +50,7 @@ int main(int argc, char *argv[]) {
 }
 
 void increment(char *fileName) {
+		FILE *fp;
 		fp = fopen(fileName, "r+");
 		while (fscanf(fp, "%d", &read) == 1);
 		fclose(fp);
