@@ -86,7 +86,7 @@ void enter_region()
 	}
 
 	set_sv(sv, &status);
-	while (get_set_flag(otherProcess) != 0 && get_turn(otherProcess) == turn);
+	while ((get_set_flag(otherProcess) != 0) && (get_turn(otherProcess) == turn));
 }
 
 int get_set_flag(pid_t PID)
