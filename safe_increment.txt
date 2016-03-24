@@ -2,60 +2,58 @@
 #include <lib.h>
 #include <string.h>
 #include <unistd.h>
-#include "safe_increment.h"
+#include "petersons.h"
 
 int main(int argc, char *argv[]) {
-	if (argc != 4) {
-		printf("Please provide correct arguments.\n");
-		return 1;
-	}
-
-	int numberOfRowsToAppend = atoi(argv[1]);
-	char *writingFile = argv[2];
-	char *configFile = argv[3];
-	
-	int currentPID = getpid();
-	int otherPID;
+	int read, i, process;
+	int iterations = atoi(argv[1]);
+	pid_t currentProcess, otherProcess;	
 
 	FILE *fp;
-	fp = fopen(configFile, "a+");
-	fprintf(fp, "%d\n", currentPID);
+	FILE *config;
 
-	int read;
-	int numberOfProcesses = 0;
-	while(numberOfProcesses < 2) {
-		fseek(fp, 0, SEEK_SET);
-		numberOfProcesses = 0;	
-		while(fscanf(fp, "%d", &read) == 1) {
-			if(read != currentPID) {
-				otherPID = read;
-			}
-			numberOfProcesses++;
+	if((config = fopen(argv[3], "r+")) != NULL) {
+		fseek(config, 0, SEEK_END);
+		fprintf(config, "%d\n", getpid());
+		
+		i = 0;	
+		while (i < 2) {
+			i = 0;
+			fseek(config, 0, SEEK_SET);
+			while(fscanf(config, "%d", &read) == 1)
+				i += 1;
+		}
+	
+		fseek(config, 0, SEEK_SET);
+		fscanf(config, "%d", &read);
+
+		if (read == getpid()) {
+			process = 0;
+			currentProcess = read;
+			fscanf(config, "%d", &read);
+			otherProcess = read;
+		} else {
+			process = 1;
+			otherProcess = read;
+			fscanf(config, "%d", &read);
+			currentProcess = read;
 		}
 	}
 
-	fclose(fp);
 
-	for (i=0; i < numberOfRowsToAppend; i++) {
-		enter_region(process, currentPID, otherPID);
-		increment(writingFile);
+	for (i=0; i < iterations; i++) {
+		enter_region(process, currentProcess, otherProcess);
+		fp = fopen(argv[2], "r+");
+		while (fscanf(fp, "%d", &read) == 1);
+		fclose(fp);
+
+		fp = fopen (argv[2], "a+");
+		fprintf(fp, "%d\n", read+1);
+		fclose(fp);
 		leave_region();
 	}
 
 	return 0;
-}
-
-void increment(char *fileName) {
-	FILE *fp;
-	fp = fopen(fileName, "r+");
-
-	int read;
-	while (fscanf(fp, "%d", &read) == 1);
-	fclose(fp);
-
-	fp = fopen (fileName, "a+");
-	fprintf(fp, "%d\n", read+1);
-	fclose(fp);
 }
 
 void enter_region(int process, int currentProcess, int otherProcess) {
@@ -102,3 +100,4 @@ int get_turn(process, currentProcess, otherProcess) {
 
 	return (currentProcessTurn ^ otherProcessTurn);
 }
+
