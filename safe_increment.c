@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #define TURNBIT 1
-#define SETFLAGBIT (1 << 1)
+#define SETFLAGBIT 2
 
 void increment(char*);
 void enter_region(void);
@@ -75,8 +75,8 @@ void enter_region()
 	int sv;
 
 	sv = 0;
-	sv |= SETFLAGBIT; 
-	sv |= TURNBIT; 
+	sv |= 1 << SETFLAGBIT; 
+	sv |= 1 << TURNBIT; 
 
 	int turn;
 	if (currentProcess < otherProcess) {
@@ -109,10 +109,10 @@ int get_turn(pid_t otherPID)
 	int otherProcessTurnBit;
 
 	currentProcessSV = get_sv(getpid(), &status);
-	currentProcessTurnBit = (currentProcessSV & TURNBIT);
+	currentProcessTurnBit = (currentProcessSV & (1 << TURNBIT));
 
 	otherProcessSV = get_sv(otherPID, &status);
-	otherProcessTurnBit = (otherProcessSV & TURNBIT);
+	otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
 
 	return (currentProcessTurnBit ^ otherProcessTurnBit);
 }
