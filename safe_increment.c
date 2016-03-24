@@ -17,8 +17,9 @@ int main(int argc, char *argv[]) {
 	char *writingFile = argv[2];
 	char *configFile = argv[3];
 	
-	int currentPID = getpid();
-	int otherPID;
+	int process;
+	pid_t currentPID = getpid();
+	pid_t otherPID;
 
 	FILE *fp;
 	fp = fopen(configFile, "a+");
@@ -31,7 +32,10 @@ int main(int argc, char *argv[]) {
 		numberOfProcesses = 0;	
 		while(fscanf(fp, "%d", &read) == 1) {
 			if(read != currentPID) {
+				process = 1;
 				otherPID = read;
+			} else {
+				process = 0;
 			}
 			numberOfProcesses++;
 		}
