@@ -71,13 +71,17 @@ int enter_region()
 
 	sv = 0;
 	sv |= 1 << SETFLAGBIT; 
-	sv |= 1 << TURNBIT; 
+	sv |= 1 << TURNBIT;
+
+	int otherProcessSV = get_sv(otherProcess, &status);
+	int otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
+	printf("Turn Bit: %d\n", otherProcessTurnBit);
 
 	int turn;
 	if (currentProcess < otherProcess) {
-		turn = 0;
-	} else {
 		turn = 1;
+	} else {
+		turn = 0;
 	}
 
 	set_sv(sv, &status);
