@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
+	int i;
 	for (i=0; i<numberOfRowsToAppend; i++) {
 		enter_region();
 		increment(writingFile);
