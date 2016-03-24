@@ -8,8 +8,16 @@
 #define TURN 2
 
 int main(int argc, char *argv[]) {
-	int i, process;
-	int iterations = atoi(argv[1]);
+	if (argc != 4) {
+		printf("Please provide correct arguments.\n");
+		return 1;
+	}
+
+	int numberOfRowsToAppend = atoi(argv[1]);
+	char *writingFile = argv[2];
+	char *configFile = argv[3];
+
+	int process;
 	pid_t currentPID = getpid();
 	pid_t otherPID;
 
@@ -29,32 +37,36 @@ int main(int argc, char *argv[]) {
 			numberOfProcesses++;
 		}
 	}
-
 	fclose(fp);
 
-	for (i=0; i < iterations; i++) {
-		enter_region(process, currentProcess, otherProcess);
-		fp = fopen(argv[2], "r+");
-		while (fscanf(fp, "%d", &read) == 1);
-		fclose(fp);
-
-		fp = fopen (argv[2], "a+");
-		fprintf(fp, "%d\n", read+1);
-		fclose(fp);
+	int i;
+	for (i=0; i < numberOfRowsToAppend; i++) {
+		enter_region(process, currentPID, otherPID);
+		increment(fileName);
 		leave_region();
 	}
 
 	return 0;
 }
 
-void enter_region(int process, int currentProcess, int otherProcess) {
+void increment(char *fileName) {
+		fp = fopen(fileName, "r+");
+		while (fscanf(fp, "%d", &read) == 1);
+		fclose(fp);
+
+		fp = fopen (fileName, "a+");
+		fprintf(fp, "%d\n", read+1);
+		fclose(fp);
+}
+
+void enter_region(int process, int currentPID, int otherPID) {
 	int sv = 1;
 	int status;
 
 	set_sv(sv |= 1 << 2, &status);
 	set_sv(sv |= 1 << 1, &status);
 		
-	while ((get_turn(process, currentProcess, otherProcess) != process) && (get_other_flag(otherProcess) == TRUE));
+	while ((get_turn(process, currentPID, otherPID) != process) && (get_other_flag(otherPID) == TRUE));
 }
 
 void leave_region() {
@@ -62,21 +74,21 @@ void leave_region() {
 	set_sv(0, &status);
 }
 
-int get_other_flag (int otherProcess) {
+int get_other_flag (int otherPID) {
 	int status;
-	int sv = get_sv(otherProcess, &status);
+	int sv = get_sv(otherPID, &status);
 	int otherFlag = (sv & (1 << SETFLAG));
 
 	return otherFlag;
 }
 
-int get_turn(process, currentProcess, otherProcess) {
+int get_turn(process, currentPID, otherPID) {
 	int status;
 	
-	int currentProcessSV = get_sv(currentProcess, &status);
+	int currentProcessSV = get_sv(currentPID, &status);
 	int currentProcessTurn = (currentProcessSV & (1 << TURN));
 
-	int otherProcessSV = get_sv(otherProcess, &status);
+	int otherProcessSV = get_sv(otherPID, &status);
 	int otherProcessTurn = (otherProcessSV & (1 << TURN));
 
 	if (process == 0) {	
