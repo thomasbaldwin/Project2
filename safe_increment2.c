@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 	int i;
 	for (i=0; i < numberOfRowsToAppend; i++) {
 		enter_region(process, currentPID, otherPID);
-		increment(fileName);
+		increment(writingFile);
 		leave_region();
 	}
 
@@ -50,8 +50,10 @@ int main(int argc, char *argv[]) {
 }
 
 void increment(char *fileName) {
-		FILE *fp;
+		FILE *fp;		
 		fp = fopen(fileName, "r+");
+		
+		int read;
 		while (fscanf(fp, "%d", &read) == 1);
 		fclose(fp);
 
