@@ -8,8 +8,8 @@
 #define TURN 1
 
 int main(int argc, char *argv[]) {
-	int read, i, process;
 	int iterations = atoi(argv[1]);
+	int process;
 	pid_t currentPID;
 	pid_t otherPID;	
 
@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
+	int i;
 	for (i=0; i < iterations; i++) {
 		enter_region(process, currentPID, otherPID);
 		increment(argv[2]);
