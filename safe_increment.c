@@ -1,29 +1,17 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <lib.h>
+#include <string.h>
+#include <unistd.h>
+#include "safe_increment.h"
 
-#define SETFLAGBIT 2
-#define TURNBIT 1
-
-void enter_region(int, int, int);
-void increment(char*);
-void leave_region(void);
-
-int get_process(int, int);
-int get_other_set_flag(int);
-int get_turn(int, int, int);
+#define SETFLAG 2
+#define TURN 1
 
 int main(int argc, char *argv[]) {
-	if (argc != 4) {
-		printf("Please provide correct arguments.\n");
-		return 1;
-	}
-
-	int numberOfRowsToAppend = atoi(argv[1]);
-	char *writingFile = argv[2];
-	char *configFile = argv[3];
-	
-	int currentPID = getpid();
-	int otherPID;
+	int read, i, process;
+	int iterations = atoi(argv[1]);
+	pid_t currentPID;
+	pid_t otherPID;	
 
 	FILE *fp;
 	fp = fopen(configFile, "a+");
@@ -35,7 +23,11 @@ int main(int argc, char *argv[]) {
 		fseek(fp, 0, SEEK_SET);
 		numberOfProcesses = 0;	
 		while(fscanf(fp, "%d", &read) == 1) {
-			if(read != currentPID) {
+			if(read == getpid()) {
+				process = 0;
+				currentPID = read;
+			} else {
+				process = 1;
 				otherPID = read;
 			}
 			numberOfProcesses++;
@@ -44,87 +36,67 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
-	int process = get_process(currentPID, otherPID);
-
-	int i;
-	for(i=0; i<numberOfRowsToAppend; i++) {
+	for (i=0; i < iterations; i++) {
 		enter_region(process, currentPID, otherPID);
-		increment(writingFile);
+		increment(argv[2]);
 		leave_region();
 	}
 
 	return 0;
 }
 
-int get_process(int currentPID, int otherPID) {
-	if (currentPID < otherPID) {
-		return 1;
-	}
+void enter_region(int process, int currentPID, int otherPID) {
+	int sv = 1;
+	int status;
 
-	return 0;
+	set_sv(sv |= 1 << SETFLAG, &status);
+	set_sv(sv |= 1 << TURN, &status);
+		
+	while ((get_turn(process, currentPID, otherPID) != process) 
+		&& (get_other_set_flag(otherPID) == TRUE));
 }
 
 void increment(char *fileName) {
-	FILE *fp;
-	int read;
-
 	fp = fopen(fileName, "r+");
-	while(fscanf(fp, "%d", &read) == 1);
+	while (fscanf(fp, "%d", &read) == 1);
 	fclose(fp);
 
 	fp = fopen(fileName, "a+");
-	printf("%d\n", read+1);
 	fprintf(fp, "%d\n", read+1);
 	fclose(fp);
 }
 
-void enter_region(int process, int currentPID, int otherPID)
-{
+void leave_region() {
 	int status;
-	int sv;
-
-	sv = 1;
-	sv |= 1 << SETFLAGBIT;
-	sv |= 1 << TURNBIT; 
-
-	set_sv(sv, &status);
-	while (get_other_set_flag(otherPID) == 1 &&
-		get_turn(process, currentPID, otherPID) != process);
+	set_sv(0, &status);
 }
 
-int get_other_set_flag(int otherPID)
-{
+int get_other_set_flag(int otherPID) {
 	int status;
-	int otherSV = get_sv(otherPID, &status);
-	int otherFlag = !!(otherSV & (1 << SETFLAGBIT));
+	int sv = get_sv(otherPID, &status);
+	int otherFlag = (sv & (1 << SETFLAG));
 	return otherFlag;
 }
 
-int get_turn(int process, int currentPID, int otherPID)
-{
+int get_turn(process, currentPID, otherPID) {
 	int status;
+	
 	int currentProcessSV = get_sv(currentPID, &status);
-	int currentProcessTurn = !!(currentProcessSV & (1 << TURNBIT));
-	int otherProcessSV = get_sv(otherPID, &status);
-	int otherProcessTurn = !!(currentProcessSV & (1 << TURNBIT));
+	int currentProcessTurn = (currentProcessSV & (1 << TURN));
 
-	if (process == 0) {
+	int otherProcessSV = get_sv(otherPID, &status);
+	int otherProcessTurn = (otherProcessSV & (1 << TURN));
+
+	if (process == 0) {	
 		while((currentProcessTurn ^ otherProcessTurn) == 0) {
-			currentProcessSV ^= 1 << TURNBIT;
-			set_sv(currentProcessSV, &status);
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	} else {
 		while((currentProcessTurn ^ otherProcessTurn) == 1) {
-			currentProcessSV ^= 1 << TURNBIT;
-			set_sv(currentProcessSV, &status);
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	}
-	
+
 	return (currentProcessTurn ^ otherProcessTurn);
 }
 
-void leave_region()
-{
-	int status;
-	set_sv(0, &status);	
-}
