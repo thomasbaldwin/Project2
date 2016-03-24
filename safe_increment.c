@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 
 void increment(char *fileName) {
 	FILE *fp;
-	fp = fopen(fileName, "r+");
+	fp = fopen(fileName, "r");
 
 	int read;
 	while (fscanf(fp, "%d", &read) == 1);
@@ -86,7 +86,6 @@ int get_other_flag (int otherProcess) {
 	int status;
 	int sv = get_sv(otherProcess, &status);
 	int otherFlag = (sv & (1 << SETFLAG));
-
 	return otherFlag;
 }
 
@@ -100,7 +99,11 @@ int get_turn(process, currentProcess, otherProcess) {
 	int otherProcessTurn = (otherProcessSV & (1 << TURN));
 
 	if (process == 0) {	
-		if((currentProcessTurn ^ otherProcessTurn) == 1) {
+		while((currentProcessTurn ^ otherProcessTurn) == 0) {
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
+		}
+	} else {
+		while((currentProcessTurn ^ otherProcessTurn) == 1) {
 			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	}
