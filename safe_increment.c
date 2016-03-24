@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include "safe_increment.h"
 
-#define TURNBIT 1
-#define SETFLAGBIT 2
+#define TURNBIT 0
+#define SETFLAGBIT 1
 
 pid_t currentProcess;
 pid_t otherProcess;
@@ -91,7 +91,7 @@ int get_set_flag(pid_t PID)
 	int bit;
 
 	sv = get_sv(PID, &status);
-	bit = (sv & SETFLAGBIT);
+	bit = (sv & (1 << SETFLAGBIT));
 	return bit;
 }
 
