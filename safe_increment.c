@@ -44,13 +44,12 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
-	enter_region();
-	int i;
 	for (i=0; i<numberOfRowsToAppend; i++) {
+		enter_region();
 		increment(writingFile);
+		leave_region();
 	}
-	leave_region();
-	
+
 	return 0;
 }
 
