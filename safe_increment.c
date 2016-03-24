@@ -4,7 +4,7 @@
 #define TURNBIT 1
 #define SETFLAGBIT (1 << 1)
 
-void increment(int, char*);
+void increment(char*);
 void enter_region(void);
 void leave_region(void);
 int get_set_flag(pid_t);
@@ -12,16 +12,19 @@ int get_turn(pid_t);
 
 pid_t currentProcess;
 pid_t otherProcess;
-int process;
 
 int main(int argc, char *argv[]) {
-	if (argc != 3) {
+	if (argc != 4) {
 		printf("Please provide correct arguments");
 		return 1;
 	}
 
+	int numberOfRowsToAppend = atoi(argv[1]);
+	char *writingFile = argv[2];
+	char *configFile = argv[3];
+
 	FILE *fp;
-	fp = fopen("config.txt", "a+");
+	fp = fopen(configFile, "a+");
 
 	currentProcess = getpid();
 	fprintf(fp, "%d\n", currentProcess);
@@ -41,26 +44,17 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
-	if (currentProcess < otherProcess) {
-		process = 0;
-	} else {
-		process = 1;
-	}
-
-	int numberOfRowsToAppend = atoi(argv[1]);
-	char *fileName = argv[2];
-
 	int i;
 	for(i=0; i<numberOfRowsToAppend; i++) {
 		enter_region();
-		increment(numberOfRowsToAppend, fileName);
+		increment(writingFile);
 		leave_region();
 	}
 
 	return 0;
 }
 
-void increment(int numberOfRowsToAppend, char *fileName) {
+void increment(char *fileName) {
 	FILE *fp;
 	int read;
 
@@ -91,13 +85,8 @@ void enter_region()
 		turn = 1;
 	}
 
-	printf("Made it to enter_region \n");
-
 	set_sv(sv, &status);
-
-	printf("Set_sv in enter region called \n");
-
-	while (get_set_flag(otherProcess) != 0 && get_turn(otherProcess) == turn);
+	while (get_set_flag(otherProcess) != 0 && get_turn(otherProcess) == turn){}
 }
 
 int get_set_flag(pid_t PID)
@@ -107,10 +96,7 @@ int get_set_flag(pid_t PID)
 	int bit;
 
 	sv = get_sv(PID, &status);
-
 	bit = (sv & SETFLAGBIT);
-
-	printf("Made it to get_set_flag \n");
 	return bit;
 }
 
@@ -122,23 +108,17 @@ int get_turn(pid_t otherPID)
 	int otherProcessSV;
 	int otherProcessTurnBit;
 
-	printf("Made it to get_turn");
-
 	currentProcessSV = get_sv(getpid(), &status);
 	currentProcessTurnBit = (currentProcessSV & TURNBIT);
 
 	otherProcessSV = get_sv(otherPID, &status);
 	otherProcessTurnBit = (otherProcessSV & TURNBIT);
 
-	printf("Made it to get_turn");
-
 	return ((currentProcessTurnBit & TURNBIT) ^ (otherProcessTurnBit & TURNBIT));
 }
 
 void leave_region()
 {
-	printf("Made it to leave_region \n");
 	int status;
 	set_sv(0, &status);	
-	printf("Set sv called in leave_region \n");
 }
