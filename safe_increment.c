@@ -114,7 +114,7 @@ int get_turn(pid_t otherPID)
 	otherProcessSV = get_sv(otherPID, &status);
 	otherProcessTurnBit = (otherProcessSV & TURNBIT);
 
-	return ((currentProcessTurnBit & TURNBIT) ^ (otherProcessTurnBit & TURNBIT));
+	return (currentProcessTurnBit ^ otherProcessTurnBit);
 }
 
 void leave_region()
