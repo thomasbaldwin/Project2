@@ -2,7 +2,7 @@
 #include <lib.h>
 #include <string.h>
 #include <unistd.h>
-#include “safe_increment.h”
+#include "safe_increment.h"
 
 #define SETFLAG 1
 #define TURN 2
@@ -10,8 +10,8 @@
 int main(int argc, char *argv[]) {
 	int i, process;
 	int iterations = atoi(argv[1]);
-	pid_t currentProcess = getpid();
-	pid_t otherProcess;
+	pid_t currentPID = getpid();
+	pid_t otherPID;
 
 	FILE *fp;
 	fp = fopen(configFile, "a+");
