@@ -72,19 +72,28 @@ int enter_region()
 	sv = 0;
 	sv |= 1 << SETFLAGBIT; 
 
-	int otherProcessSV = get_sv(otherProcess, &status);
-	int otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
-	if (otherProcessTurnBit == 1) {
-		sv ^= (-0 ^ sv) & (1 << TURNBIT);
-	} else {
-		sv ^= (-1 ^ sv) & (1 << TURNBIT);
-	}
-
 	int turn;
 	if (currentProcess < otherProcess) {
 		turn = 1;
 	} else {
 		turn = 0;
+	}
+
+	int otherProcessSV = get_sv(otherProcess, &status);
+	int otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
+
+	if (turn == 0) {
+		if (otherProcessTurnBit != 0) {
+			sv |= 1 << TURNBIT;
+		} else {
+			sv &= ~(1 << TURNBIT);
+		}
+	} else {
+		if (otherProcessTurnBit != 0) {
+			sv &= ~(1 << TURNBIT);
+		} else {
+			sv |= 1 << TURNBIT;
+		}
 	}
 
 	set_sv(sv, &status);
