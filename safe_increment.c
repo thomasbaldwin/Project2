@@ -73,7 +73,7 @@ void enter_region(int process, int currentProcess, int otherProcess) {
 	set_sv(sv |= 1 << SETFLAG, &status);
 	set_sv(sv |= 1 << TURN, &status);
 		
-	while ((get_turn(process, currentProcess, otherProcess) != 1) 
+	while ((get_turn(process, currentProcess, otherProcess) != process) 
 		&& (get_other_flag(otherProcess) == TRUE));
 }
 
@@ -99,12 +99,20 @@ int get_turn(process, currentProcess, otherProcess) {
 	int otherProcessSV = get_sv(otherProcess, &status);
 	int otherProcessTurn = (otherProcessSV & (1 << TURN));
 
-	while((currentProcessTurn ^ otherProcessTurn) == 0) {
-		if (currentProcess < otherProcess) {
+	if (process == 0) {	
+		if((currentProcessTurn ^ otherProcessTurn) == 0) {
 			set_sv(currentProcessSV ^= 1 << TURN, &status);
-			return 0;
+		}
+	} else {
+		if((currentProcessTurn ^ otherProcessTurn) == 1) {
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	}
 
-	return 1;
+	currentProcessSV = get_sv(currentProcess, &status);
+	currentProcessTurn = (currentProcessSV & (1 << TURN));
+
+	otherProcessSV = get_sv(otherProcess, &status);
+	otherProcessTurn = (otherProcessSV & (1 << TURN));
+	return (currentProcessTurn ^ otherProcessTurn);
 }
