@@ -126,9 +126,9 @@ int get_turn(pid_t otherPID)
 		} else {
 			int sv, status;
 			sv = 1;
-			sv |= 0 << TURNBIT; 
+			sv |= 1 << TURNBIT; 
 			set_sv(sv, &status);
-			return 0;
+			return 1;
 		}
 	}
 
