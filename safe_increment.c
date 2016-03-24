@@ -66,14 +66,14 @@ void increment(char *fileName) {
 	fclose(fp);
 }
 
-void enter_region(int process, int currentProcess, int otherProcess) {
+void enter_region(int process, int currentPID, int otherPID) {
 	int sv = 1;
 	int status;
 
 	set_sv(sv |= 1 << SETFLAG, &status);
 	set_sv(sv |= 1 << TURN, &status);
 		
-	while ((get_turn(process, currentProcess, otherProcess) != process) 
+	while ((get_turn(process, currentPID, otherPID) != process) 
 		&& (get_other_set_flag(otherProcess) == TRUE));
 }
 
