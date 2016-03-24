@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include "safe_increment.h"
 
+#define TURN 1
+#define SETFLAG 2
+
 int main(int argc, char *argv[]) {
 	if (argc != 4) {
 		printf("Please provide correct arguments.\n");
@@ -62,10 +65,11 @@ void enter_region(int process, int currentProcess, int otherProcess) {
 	int sv = 1;
 	int status;
 
-	set_sv(sv |= 1 << 2, &status);
-	set_sv(sv |= 1 << 1, &status);
+	set_sv(sv |= 1 << SETFLAG, &status);
+	set_sv(sv |= 1 << TURN, &status);
 		
-	while ((get_turn(process, currentProcess, otherProcess) != process) && (get_other_flag(otherProcess) == TRUE));
+	while ((get_turn(process, currentProcess, otherProcess) != process) 
+		&& (get_other_flag(otherProcess) == TRUE));
 }
 
 void leave_region() {
@@ -76,7 +80,7 @@ void leave_region() {
 int get_other_flag (int otherProcess) {
 	int status;
 	int sv = get_sv(otherProcess, &status);
-	int otherFlag = (sv & (1 << 2));
+	int otherFlag = (sv & (1 << SETFLAG));
 
 	return otherFlag;
 }
@@ -85,18 +89,18 @@ int get_turn(process, currentProcess, otherProcess) {
 	int status;
 	
 	int currentProcessSV = get_sv(currentProcess, &status);
-	int currentProcessTurn = (currentProcessSV & (1 << 1));
+	int currentProcessTurn = (currentProcessSV & (1 << TURN));
 
 	int otherProcessSV = get_sv(otherProcess, &status);
-	int otherProcessTurn = (otherProcessSV & (1 << 1));
+	int otherProcessTurn = (otherProcessSV & (1 << TURN));
 
 	if (process == 0) {	
 		while((currentProcessTurn ^ otherProcessTurn) == 0) {
-			set_sv(currentProcessSV ^= 1 << 1, &status);
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	} else {
 		while((currentProcessTurn ^ otherProcessTurn) == 1) {
-			set_sv(currentProcessSV ^= 1 << 1, &status);
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	}
 
