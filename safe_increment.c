@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define TURNBIT 0
-#define SETFLAGBIT 1
+#define TURNBIT 1
+#define SETFLAGBIT (1 << 1)
 
 void increment(int, char*);
 void enter_region(void);
@@ -12,6 +12,7 @@ int get_turn(pid_t);
 
 pid_t currentProcess;
 pid_t otherProcess;
+int process;
 
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
@@ -39,6 +40,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	fclose(fp);
+
+	if (currentProcess < otherProcess) {
+		process = 0;
+	} else {
+		process = 1;
+	}
 
 	int numberOfRowsToAppend = atoi(argv[1]);
 	char *fileName = argv[2];
@@ -73,16 +80,18 @@ void enter_region()
 	int status;
 	int sv;
 
-	sv = 1;
-	sv |= 1 << SETFLAGBIT; 
-	sv |= 1 << TURNBIT; 
+	sv = 0;
+	sv |= SETFLAGBIT; 
+	sv |= TURNBIT; 
 
 	int turn;
 	if (currentProcess < otherProcess) {
-		turn = 1;
-	} else {
 		turn = 0;
+	} else {
+		turn = 1;
 	}
+
+	set_sv(sv)
 	while (get_set_flag(otherProcess) == 1 && get_turn(otherProcess) == turn);
 }
 
@@ -93,7 +102,7 @@ int get_set_flag(pid_t PID)
 	int bit;
 
 	sv = get_sv(PID, &status);	
-	bit = (sv & (1 << SETFLAGBIT));
+	bit = (sv & SETFLAGBIT);
 	return bit;
 }
 
@@ -106,30 +115,12 @@ int get_turn(pid_t otherPID)
 	int otherProcessTurnBit;
 
 	currentProcessSV = get_sv(getpid(), &status);
-	currentProcessTurnBit = (currentProcessSV & (1 << TURNBIT));
+	currentProcessTurnBit = (currentProcessSV & TURNBIT);
 
 	otherProcessSV = get_sv(otherPID, &status);
-	otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
+	otherProcessTurnBit = (otherProcessSV & TURNBIT);
 
-	if ((currentProcessTurnBit ^ otherProcessTurnBit) == 0) {
-		if (currentProcess < otherProcess) {
-			int sv, status;
-			sv = 1;
-			sv |= 1 << SETFLAGBIT; 
-			sv |= 0 << TURNBIT; 
-			set_sv(sv, &status);
-			return 0;
-		} else {
-			int sv, status;
-			sv = 1;
-			sv |= 1 << SETFLAGBIT; 
-			sv |= 0 << TURNBIT; 
-			set_sv(sv, &status);
-			return 0;
-		}
-	}
-
-	return 1;
+	return ((currentProcessTurnBit & TURNBIT) ^ (otherProcessTurnBit & TURNBIT));
 }
 
 void leave_region()
