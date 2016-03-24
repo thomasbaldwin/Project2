@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include "safe_increment.h"
 
-#define TURN 1
-#define SETFLAG 2
+#define TURN 0
+#define SETFLAG 1
 
 int main(int argc, char *argv[]) {
 	if (argc != 4) {
@@ -73,7 +73,7 @@ void enter_region(int process, int currentProcess, int otherProcess) {
 	set_sv(sv |= 1 << SETFLAG, &status);
 	set_sv(sv |= 1 << TURN, &status);
 		
-	while ((get_turn(process, currentProcess, otherProcess) == 0) 
+	while ((get_turn(process, currentProcess, otherProcess) != process) 
 		&& (get_other_flag(otherProcess) == TRUE));
 }
 
@@ -99,14 +99,15 @@ int get_turn(process, currentProcess, otherProcess) {
 	int otherProcessSV = get_sv(otherProcess, &status);
 	int otherProcessTurn = (otherProcessSV & (1 << TURN));
 
-	printf("Other Process Turn: %d\n", currentProcessTurn);
-	printf("Other Process Turn: %d\n", otherProcessTurn);
-	
-	if((currentProcessTurn ^ otherProcessTurn) == 0) {
-		if (currentProcess > otherProcess) {
-			return 0;
+	if (process == 0) {	
+		while((currentProcessTurn ^ otherProcessTurn) == 0) {
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
+		}
+	} else {
+		while((currentProcessTurn ^ otherProcessTurn) == 1) {
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	}
 
-	return 1;
+	return (currentProcessTurn ^ otherProcessTurn);
 }
