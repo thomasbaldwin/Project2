@@ -75,9 +75,9 @@ int enter_region()
 	int otherProcessSV = get_sv(otherProcess, &status);
 	int otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
 	if (otherProcessTurnBit == 1) {
-		sv |= 0 << TURNBIT;
+		sv ^= (-0 ^ sv) & (1 << TURNBIT);
 	} else {
-		sv |= 1 << TURNBIT;
+		sv ^= (-1 ^ sv) & (1 << TURNBIT);
 	}
 
 	int turn;
