@@ -114,16 +114,14 @@ int get_turn(pid_t otherPID)
 	if ((currentProcessTurnBit ^ otherProcessTurnBit) == 0) {
 		if (currentProcess < otherProcess) {
 			int sv, status;
-			sv = 1;
-			sv |= 1 << TURNBIT; 
+			sv = 0;
 			set_sv(sv, &status);
-			return 1;
+			return 0;
 		} else {
 			int sv, status;
-			sv = 1;
-			sv |= 1 << TURNBIT; 
+			sv = 0;
 			set_sv(sv, &status);
-			return 1;
+			return 0;
 		}
 	}
 
