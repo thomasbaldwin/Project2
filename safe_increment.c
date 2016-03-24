@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	pid_t otherPID;	
 
 	FILE *fp;
-	fp = fopen(configFile, "a+");
+	fp = fopen(argv[3], "a+");
 	fprintf(fp, "%d\n", currentPID);
 
 	int read;
