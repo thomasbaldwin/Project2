@@ -3,10 +3,10 @@
 
 int main(int argc, char *argv[])
 {
-	char *fileName = "foo.txt";
+	char *fileName = argv[1];
 
 	FILE *fp;
-	fp = fopen("foo.txt", "r+");
+	fp = fopen(fileName, "r+");
 
 	int currentValue;
 	int previousValue;

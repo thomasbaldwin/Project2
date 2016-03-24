@@ -3,9 +3,6 @@
 
 int main(int argc, char *argv[])
 {
-	int status;
-	get_sv(40, &status);
-
 	if (argc != 3) {
 		printf("Usage: %s m n filename\n", argv[0]);
 		return 1;
