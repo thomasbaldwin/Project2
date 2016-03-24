@@ -7,8 +7,8 @@
 void increment(char*);
 void enter_region(void);
 void leave_region(void);
-int get_set_flag(pid_t);
-int get_turn(pid_t);
+int get_other_set_flag(void);
+int get_turn(void);
 
 pid_t currentProcess;
 pid_t otherProcess;
@@ -87,22 +87,21 @@ void enter_region()
 
 	set_sv(sv, &status);
 	sleep(1);
-	while (get_set_flag(otherProcess) != 0 && get_turn(otherProcess) == turn){}
+	while (get_other_set_flag() != 0 && get_turn() == turn){}
 }
 
-int get_set_flag(pid_t PID)
+int get_other_set_flag()
 {
 	int status;
 	int sv;
 	int bit;
 
-	sv = get_sv(PID, &status);
-	sleep(1);
+	sv = get_sv(otherProcess, &status);
 	bit = (sv & SETFLAGBIT);
 	return bit;
 }
 
-int get_turn(pid_t otherPID)
+int get_turn()
 {
 	int status;
 	int currentProcessSV;
@@ -110,10 +109,10 @@ int get_turn(pid_t otherPID)
 	int otherProcessSV;
 	int otherProcessTurnBit;
 
-	currentProcessSV = get_sv(getpid(), &status);
+	currentProcessSV = get_sv(currentProcess, &status);
 	currentProcessTurnBit = (currentProcessSV & TURNBIT);
 
-	otherProcessSV = get_sv(otherPID, &status);
+	otherProcessSV = get_sv(otherProcess, &status);
 	otherProcessTurnBit = (otherProcessSV & TURNBIT);
 
 	return ((currentProcessTurnBit & TURNBIT) ^ (otherProcessTurnBit & TURNBIT));
@@ -123,5 +122,4 @@ void leave_region()
 {
 	int status;
 	set_sv(0, &status);	
-	sleep(1);
 }
