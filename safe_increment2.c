@@ -31,8 +31,11 @@ int main(int argc, char *argv[]) {
 		fseek(fp, 0, SEEK_SET);
 		numberOfProcesses = 0;	
 		while(fscanf(fp, "%d", &read) == 1) {
-			if(read != currentPID) {
+			if(read == currentPID) {
+				process = 0;
+			} else {
 				otherPID = read;
+				process = 1;
 			}
 			numberOfProcesses++;
 		}
