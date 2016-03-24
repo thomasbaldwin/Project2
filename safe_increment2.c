@@ -2,44 +2,35 @@
 #include <lib.h>
 #include <string.h>
 #include <unistd.h>
-#include "petersons.h"
+#include “safe_increment.h”
+
+#define SETFLAG 1
+#define TURN 2
 
 int main(int argc, char *argv[]) {
-	int read, i, process;
+	int i, process;
 	int iterations = atoi(argv[1]);
-	pid_t currentProcess, otherProcess;	
+	pid_t currentProcess = getpid();
+	pid_t otherProcess;
 
 	FILE *fp;
-	FILE *config;
+	fp = fopen(configFile, "a+");
+	fprintf(fp, "%d\n", currentPID);
 
-	if((config = fopen(argv[3], "r+")) != NULL) {
-		fseek(config, 0, SEEK_END);
-		fprintf(config, "%d\n", getpid());
-		
-		i = 0;	
-		while (i < 2) {
-			i = 0;
-			fseek(config, 0, SEEK_SET);
-			while(fscanf(config, "%d", &read) == 1)
-				i += 1;
-		}
-	
-		fseek(config, 0, SEEK_SET);
-		fscanf(config, "%d", &read);
-
-		if (read == getpid()) {
-			process = 0;
-			currentProcess = read;
-			fscanf(config, "%d", &read);
-			otherProcess = read;
-		} else {
-			process = 1;
-			otherProcess = read;
-			fscanf(config, "%d", &read);
-			currentProcess = read;
+	int read;
+	int numberOfProcesses = 0;
+	while(numberOfProcesses < 2) {
+		fseek(fp, 0, SEEK_SET);
+		numberOfProcesses = 0;	
+		while(fscanf(fp, "%d", &read) == 1) {
+			if(read != currentPID) {
+				otherPID = read;
+			}
+			numberOfProcesses++;
 		}
 	}
 
+	fclose(fp);
 
 	for (i=0; i < iterations; i++) {
 		enter_region(process, currentProcess, otherProcess);
@@ -74,7 +65,7 @@ void leave_region() {
 int get_other_flag (int otherProcess) {
 	int status;
 	int sv = get_sv(otherProcess, &status);
-	int otherFlag = (sv & (1 << 2));
+	int otherFlag = (sv & (1 << SETFLAG));
 
 	return otherFlag;
 }
@@ -83,18 +74,18 @@ int get_turn(process, currentProcess, otherProcess) {
 	int status;
 	
 	int currentProcessSV = get_sv(currentProcess, &status);
-	int currentProcessTurn = (currentProcessSV & (1 << 1));
+	int currentProcessTurn = (currentProcessSV & (1 << TURN));
 
 	int otherProcessSV = get_sv(otherProcess, &status);
-	int otherProcessTurn = (otherProcessSV & (1 << 1));
+	int otherProcessTurn = (otherProcessSV & (1 << TURN));
 
 	if (process == 0) {	
 		while((currentProcessTurn ^ otherProcessTurn) == 0) {
-			set_sv(currentProcessSV ^= 1 << 1, &status);
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	} else {
 		while((currentProcessTurn ^ otherProcessTurn) == 1) {
-			set_sv(currentProcessSV ^= 1 << 1, &status);
+			set_sv(currentProcessSV ^= 1 << TURN, &status);
 		}
 	}
 
