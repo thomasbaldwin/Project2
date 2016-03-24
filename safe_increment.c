@@ -77,11 +77,6 @@ void enter_region()
 	sv |= 1 << SETFLAGBIT; 
 	sv |= 1 << TURNBIT; 
 
-	while (get_sv(otherProcess) == 1 && get_)
-
-	set_sv(sv, &status);
-	int otherSetFlag = get_set_flag(otherProcess);
-
 	int turn;
 	if (currentProcess < otherProcess) {
 		turn = 1;
