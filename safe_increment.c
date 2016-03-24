@@ -115,15 +115,17 @@ int get_turn(pid_t otherPID)
 		if (currentProcess < otherProcess) {
 			int sv, status;
 			sv = 1;
+			sv |= 1 << SETFLAGBIT; 
 			sv |= 0 << TURNBIT; 
 			set_sv(sv, &status);
 			return 0;
 		} else {
 			int sv, status;
 			sv = 1;
+			sv |= 1 << SETFLAGBIT; 
 			sv |= 0 << TURNBIT; 
 			set_sv(sv, &status);
-			return ;
+			return 0;
 		}
 	}
 
