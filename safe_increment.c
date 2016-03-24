@@ -1,29 +1,29 @@
 #include <stdio.h>
-#include <lib.h>
-#include <string.h>
-#include <unistd.h>
-#include "safe_increment.h"
+#include <stdlib.h>
 
-#define TURN 0
-#define SETFLAG 1
+#define SETFLAGBIT 2
+#define TURNBIT 1
+
+pid_t currentProcess;
+pid_t otherProcess;
+
+void increment(int, char*);
+void enter_region(void);
+void leave_region(void);
+int get_set_flag(pid_t);
+int get_turn(pid_t);
 
 int main(int argc, char *argv[]) {
-	if (argc != 4) {
-		printf("Please provide correct arguments.\n");
+	if (argc != 3) {
+		printf("Please provide correct arguments");
 		return 1;
 	}
 
-	int numberOfRowsToAppend = atoi(argv[1]);
-	char *writingFile = argv[2];
-	char *configFile = argv[3];
-	
-	int process;
-	pid_t currentPID = getpid();
-	pid_t otherPID;
-
 	FILE *fp;
-	fp = fopen(configFile, "a+");
-	fprintf(fp, "%d\n", currentPID);
+	fp = fopen("config.txt", "a+");
+
+	currentProcess = getpid();
+	fprintf(fp, "%d\n", currentProcess);
 
 	int read;
 	int numberOfProcesses = 0;
@@ -31,11 +31,8 @@ int main(int argc, char *argv[]) {
 		fseek(fp, 0, SEEK_SET);
 		numberOfProcesses = 0;	
 		while(fscanf(fp, "%d", &read) == 1) {
-			if(read != currentPID) {
-				process = 1;
-				otherPID = read;
-			} else {
-				process = 0;
+			if(read != getpid()) {
+				otherProcess = read;
 			}
 			numberOfProcesses++;
 		}
@@ -43,73 +40,83 @@ int main(int argc, char *argv[]) {
 
 	fclose(fp);
 
+	int numberOfRowsToAppend = atoi(argv[1]);
+	char *fileName = argv[2];
+
 	int i;
-	for (i=0; i < numberOfRowsToAppend; i++) {
-		enter_region(process, currentPID, otherPID);
-		increment(writingFile);
+	for(i=0; i<numberOfRowsToAppend; i++) {
+		enter_region();
+		increment(numberOfRowsToAppend, fileName);
 		leave_region();
 	}
 
 	return 0;
 }
 
-void increment(char *fileName) {
+void increment(int numberOfRowsToAppend, char *fileName) {
 	FILE *fp;
-	fp = fopen(fileName, "r");
-
 	int read;
-	while (fscanf(fp, "%d", &read) == 1);
+
+	fp = fopen(fileName, "r+");
+	while(!feof(fp)) {
+		fscanf(fp, "%d", &read);
+	}
 	fclose(fp);
 
-	fp = fopen (fileName, "a+");
+	fp = fopen(fileName, "a+");
 	fprintf(fp, "%d\n", read+1);
 	fclose(fp);
 }
 
-void enter_region(int process, int currentPID, int otherPID) {
-	int sv = 1;
+void enter_region()
+{
 	int status;
+	int sv;
 
-	set_sv(sv |= 1 << SETFLAG, &status);
-	set_sv(sv |= 1 << TURN, &status);
-		
-	while ((get_turn(process, currentPID, otherPID) != process) 
-		&& (get_other_set_flag(otherPID) == TRUE));
+	sv = 1;
+	sv |= 1 << SETFLAGBIT;
+	sv |= 1 << TURNBIT; 
+
+	set_sv(sv, &status);
+	int otherSetFlag = get_set_flag(otherProcess);	
+	while (get_set_flag(otherProcess) == 1 && get_turn(otherProcess) == 1);
 }
 
-void leave_region() {
+int get_set_flag(pid_t PID)
+{
 	int status;
-	set_sv(0, &status);
+	int sv;
+	int bit;
+
+	sv = get_sv(PID, &status);	
+	bit = (sv & (1 << SETFLAGBIT));
+	return bit;
 }
 
-int get_other_set_flag(int otherPID) {
+int get_turn(pid_t otherPID)
+{
 	int status;
-	int sv = get_sv(otherPID, &status);
-	int otherFlag = (sv & (1 << SETFLAG));
-    
-    if (otherFlag == 2) {
-        return TRUE
-    }
-    return FALSE:
-}
+	int currentProcessSV;
+	int currentProcessTurnBit;
+	int otherProcessSV;
+	int otherProcessTurnBit;
 
-int get_turn(process, currentPID, otherPID) {
-	int status;
-	
-	int currentProcessSV = get_sv(currentPID, &status);
-	int currentProcessTurn = (currentProcessSV & (1 << TURN));
-	int otherProcessSV = get_sv(otherPID, &status);
-	int otherProcessTurn = (otherProcessSV & (1 << TURN));
+	currentProcessSV = get_sv(getpid(), &status);
+	currentProcessTurnBit = (currentProcessSV & (1 << TURNBIT));
 
-	if (process == 0) {	
-		while((currentProcessTurn ^ otherProcessTurn) == 0) {
-			set_sv(currentProcessSV ^= 1 << TURN, &status);
-		}
-	} else {
-		while((currentProcessTurn ^ otherProcessTurn) == 1) {
-			set_sv(currentProcessSV ^= 1 << TURN, &status);
-		}
+	otherProcessSV = get_sv(otherPID, &status);
+	otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
+
+	if (currentProcessTurnBit ^ otherProcessTurnBit == 0) {
+		if (getpid() > otherPID)
+			return 0;
 	}
 
-	return (currentProcessTurn ^ otherProcessTurn);
+	return 1;
+}
+
+void leave_region()
+{
+	int status;
+	set_sv(0, &status);	
 }
