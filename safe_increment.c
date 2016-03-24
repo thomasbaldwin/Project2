@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
 	int i;
 	for (i=0; i<numberOfRowsToAppend; i++) {
-		int sv = enter_region();
+		enter_region();
 		increment(writingFile);
 		leave_region(sv);
 	}
@@ -82,7 +82,6 @@ int enter_region()
 
 	set_sv(sv, &status);
 	while ((get_set_flag(otherProcess) != 0) && (get_turn(otherProcess) == turn));
-	return sv;
 }
 
 int get_set_flag(pid_t PID)
@@ -113,8 +112,14 @@ int get_turn(pid_t otherPID)
 	return (currentProcessTurnBit ^ otherProcessTurnBit);
 }
 
-void leave_region(int sv)
+void leave_region()
 {
 	int status;
-	set_sv(sv & ~(1 << SETFLAGBIT), &status);	
+	int sv;
+
+	sv = 0;
+	sv |= 0 << SETFLAGBIT; 
+	sv |= 1 << TURNBIT; 
+
+	set_sv(sv, &status);	
 }
