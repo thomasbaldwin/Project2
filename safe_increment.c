@@ -57,6 +57,9 @@ void enter_region(int process, int currentPID, int otherPID) {
 }
 
 void increment(char *fileName) {
+	FILE *fp;
+	int read;
+
 	fp = fopen(fileName, "r+");
 	while (fscanf(fp, "%d", &read) == 1);
 	fclose(fp);
