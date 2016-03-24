@@ -74,7 +74,7 @@ void enter_region(int process, int currentPID, int otherPID) {
 	set_sv(sv |= 1 << TURN, &status);
 		
 	while ((get_turn(process, currentPID, otherPID) != process) 
-		&& (get_other_set_flag(otherProcess) == TRUE));
+		&& (get_other_set_flag(otherPID) == TRUE));
 }
 
 void leave_region() {
