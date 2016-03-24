@@ -86,7 +86,7 @@ void enter_region()
 	}
 
 	set_sv(sv, &status);
-	sleep(1);
+	sleep(0.01);
 	while (get_other_set_flag() != 0 && get_turn() == turn){}
 }
 
@@ -97,6 +97,7 @@ int get_other_set_flag()
 	int bit;
 
 	sv = get_sv(otherProcess, &status);
+	sleep(0.01);
 	bit = (sv & SETFLAGBIT);
 	return bit;
 }
@@ -122,4 +123,5 @@ void leave_region()
 {
 	int status;
 	set_sv(0, &status);	
+	sleep(0.01);
 }
