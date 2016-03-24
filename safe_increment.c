@@ -73,8 +73,8 @@ void enter_region(int process, int currentProcess, int otherProcess) {
 	set_sv(sv |= 1 << SETFLAG, &status);
 	set_sv(sv |= 1 << TURN, &status);
 		
-	while ((get_turn(process, currentProcess, otherProcess) != process) 
-		&& (get_other_set_flag(otherProcess) == TRUE));
+	while ((get_other_set_flag(otherProcess) == TRUE) && 
+		(get_turn(process, currentProcess, otherProcess) != process));
 }
 
 void leave_region() {
