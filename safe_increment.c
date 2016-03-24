@@ -1,17 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define SETFLAGBIT 2
-#define TURNBIT 1
-
-pid_t currentProcess;
-pid_t otherProcess;
+#define TURNBIT 0
+#define SETFLAGBIT 1
 
 void increment(int, char*);
 void enter_region(void);
 void leave_region(void);
 int get_set_flag(pid_t);
 int get_turn(pid_t);
+
+pid_t currentProcess;
+pid_t otherProcess;
 
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
@@ -74,12 +74,21 @@ void enter_region()
 	int sv;
 
 	sv = 1;
-	sv |= 1 << SETFLAGBIT;
+	sv |= 1 << SETFLAGBIT; 
 	sv |= 1 << TURNBIT; 
 
+	while (get_sv(otherProcess) == 1 && get_)
+
 	set_sv(sv, &status);
-	int otherSetFlag = get_set_flag(otherProcess);	
-	while (get_set_flag(otherProcess) == 1 && get_turn(otherProcess) == 1);
+	int otherSetFlag = get_set_flag(otherProcess);
+
+	int turn;
+	if (currentProcess < otherProcess) {
+		turn = 1;
+	} else {
+		turn = 0;
+	}
+	while (get_set_flag(otherProcess) == 1 && get_turn(otherProcess) == turn);
 }
 
 int get_set_flag(pid_t PID)
@@ -107,9 +116,11 @@ int get_turn(pid_t otherPID)
 	otherProcessSV = get_sv(otherPID, &status);
 	otherProcessTurnBit = (otherProcessSV & (1 << TURNBIT));
 
-	if (currentProcessTurnBit ^ otherProcessTurnBit == 0) {
-		if (getpid() > otherPID)
+	if ((currentProcessTurnBit ^ otherProcessTurnBit) == 0) {
+		if (currentProcess > otherProcess) {
+			set_sv(currentProcessSV ^= 1 << TURNBIT, &status);
 			return 0;
+		}
 	}
 
 	return 1;
